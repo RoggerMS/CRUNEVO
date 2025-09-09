@@ -18,28 +18,61 @@ import { Public } from '../auth/public.decorator';
 export class ProxyController {
   constructor(private readonly proxyService: ProxyService) {}
 
-  // Auth routes (public)
+  // Auth routes (public) - Register
   @Public()
-  @All('auth/*path')
-  async forwardAuthRequest(
+  @All('api/auth/register')
+  async forwardAuthRegister(
     @Req() req: Request,
     @Res() res: Response,
     @Body() body: any,
     @Query() query: any,
     @Headers() headers: any,
-    @Param('path') path: string,
   ) {
-    console.log('🔥 Auth request - Original URL:', req.url);
-    console.log('🔥 Auth - Method:', req.method);
-    console.log('🔥 Auth - Path param:', path);
-    const targetPath = `/api/v1/auth/${path}`;
-    console.log('🔥 Auth - Target path:', targetPath);
+    console.log('🔥 Auth register request - Original URL:', req.url);
+    console.log('🔥 Auth register - Method:', req.method);
+    console.log('🔥 Auth register - Body:', body);
+    const targetPath = `/api/v1/auth/register`;
+    console.log('🔥 Auth register - Target path:', targetPath);
+    return this.forwardToService('identity', targetPath, req, res, body, query, headers);
+  }
+
+  // Auth routes (public) - Login
+  @Public()
+  @All('api/auth/login')
+  async forwardAuthLogin(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Body() body: any,
+    @Query() query: any,
+    @Headers() headers: any,
+  ) {
+    console.log('🔥 Auth login request - Original URL:', req.url);
+    console.log('🔥 Auth login - Method:', req.method);
+    const targetPath = `/api/v1/auth/login`;
+    console.log('🔥 Auth login - Target path:', targetPath);
+    return this.forwardToService('identity', targetPath, req, res, body, query, headers);
+  }
+
+  // Auth routes (public) - Refresh
+  @Public()
+  @All('api/auth/refresh')
+  async forwardAuthRefresh(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Body() body: any,
+    @Query() query: any,
+    @Headers() headers: any,
+  ) {
+    console.log('🔥 Auth refresh request - Original URL:', req.url);
+    console.log('🔥 Auth refresh - Method:', req.method);
+    const targetPath = `/api/v1/auth/refresh`;
+    console.log('🔥 Auth refresh - Target path:', targetPath);
     return this.forwardToService('identity', targetPath, req, res, body, query, headers);
   }
 
   // Users routes (protected)
   @UseGuards(JwtAuthGuard)
-  @All('users/*path')
+  @All('api/users/:path*')
   async forwardUsersRequest(
     @Req() req: Request,
     @Res() res: Response,
@@ -53,7 +86,7 @@ export class ProxyController {
 
   // Posts routes (protected)
   @UseGuards(JwtAuthGuard)
-  @All('posts/*path')
+  @All('api/posts/:path*')
   async forwardPostsRequest(
     @Req() req: Request,
     @Res() res: Response,
@@ -67,7 +100,7 @@ export class ProxyController {
 
   // Messages routes (protected)
   @UseGuards(JwtAuthGuard)
-  @All('messages/*path')
+  @All('api/messages/:path*')
   async forwardMessagesRequest(
     @Req() req: Request,
     @Res() res: Response,
@@ -81,7 +114,7 @@ export class ProxyController {
 
   // Search routes (protected)
   @UseGuards(JwtAuthGuard)
-  @All('search/*path')
+  @All('api/search/:path*')
   async forwardSearchRequest(
     @Req() req: Request,
     @Res() res: Response,
@@ -95,7 +128,7 @@ export class ProxyController {
 
   // Service health checks (public)
   @Public()
-  @All('services/:service/health')
+  @All('api/services/:service/health')
   async checkServiceHealth(
     @Param('service') service: string,
     @Res() res: Response,
