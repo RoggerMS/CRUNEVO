@@ -2,6 +2,10 @@
 
 ## Endpoints iniciales
 
+### API Gateway
+- `GET /api/health`
+- `POST /api/auth/register`
+
 ### Identity
 - `GET /health`
 - `GET /users/:handle`

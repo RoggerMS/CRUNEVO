@@ -20,7 +20,7 @@ export class ProxyController {
 
   // Auth routes (public) - Register
   @Public()
-  @All('api/auth/register')
+  @All('auth/register')
   async forwardAuthRegister(
     @Req() req: Request,
     @Res() res: Response,
@@ -38,7 +38,7 @@ export class ProxyController {
 
   // Auth routes (public) - Login
   @Public()
-  @All('api/auth/login')
+  @All('auth/login')
   async forwardAuthLogin(
     @Req() req: Request,
     @Res() res: Response,
@@ -55,7 +55,7 @@ export class ProxyController {
 
   // Auth routes (public) - Refresh
   @Public()
-  @All('api/auth/refresh')
+  @All('auth/refresh')
   async forwardAuthRefresh(
     @Req() req: Request,
     @Res() res: Response,
@@ -72,7 +72,7 @@ export class ProxyController {
 
   // Users routes (protected)
   @UseGuards(JwtAuthGuard)
-  @All('api/users/:path*')
+  @All('users/:path*')
   async forwardUsersRequest(
     @Req() req: Request,
     @Res() res: Response,
@@ -86,7 +86,7 @@ export class ProxyController {
 
   // Posts routes (protected)
   @UseGuards(JwtAuthGuard)
-  @All('api/posts/:path*')
+  @All('posts/:path*')
   async forwardPostsRequest(
     @Req() req: Request,
     @Res() res: Response,
@@ -100,7 +100,7 @@ export class ProxyController {
 
   // Messages routes (protected)
   @UseGuards(JwtAuthGuard)
-  @All('api/messages/:path*')
+  @All('messages/:path*')
   async forwardMessagesRequest(
     @Req() req: Request,
     @Res() res: Response,
@@ -114,7 +114,7 @@ export class ProxyController {
 
   // Search routes (protected)
   @UseGuards(JwtAuthGuard)
-  @All('api/search/:path*')
+  @All('search/:path*')
   async forwardSearchRequest(
     @Req() req: Request,
     @Res() res: Response,
@@ -128,7 +128,7 @@ export class ProxyController {
 
   // Service health checks (public)
   @Public()
-  @All('api/services/:service/health')
+  @All('services/:service/health')
   async checkServiceHealth(
     @Param('service') service: string,
     @Res() res: Response,
