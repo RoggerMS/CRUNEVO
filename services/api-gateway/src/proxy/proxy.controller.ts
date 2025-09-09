@@ -1,6 +1,7 @@
 import {
   Controller,
   All,
+  Post,
   Req,
   Res,
   UseGuards,
@@ -15,74 +16,112 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Public } from '../auth/public.decorator';
 
 @Controller()
-@UseGuards(JwtAuthGuard)
 export class ProxyController {
   constructor(private readonly proxyService: ProxyService) {}
 
-  // Auth routes (public)
+  // Auth routes (public) - Using specific HTTP methods
   @Public()
-  @All('auth/*')
-  async forwardAuthRequest(
+  @Post('auth/register')
+  async forwardAuthRegister(
     @Req() req: Request,
     @Res() res: Response,
     @Body() body: any,
     @Query() query: any,
     @Headers() headers: any,
   ) {
-    const path = req.url.replace('/api/auth', '');
-    return this.forwardToService('identity', `/api/v1/auth${path}`, req, res, body, query, headers);
+    console.log('🔥 Auth register request - Original URL:', req.url);
+    console.log('🔥 Auth register - Method:', req.method);
+    console.log('🔥 Auth register - Body:', body);
+    return this.forwardToService('identity', '/api/v1/auth/register', req, res, body, query, headers);
   }
 
+  @Public()
+  @Post('auth/login')
+  async forwardAuthLogin(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Body() body: any,
+    @Query() query: any,
+    @Headers() headers: any,
+  ) {
+    console.log('🔥 Auth login request - Original URL:', req.url);
+    console.log('🔥 Auth login - Method:', req.method);
+    console.log('🔥 Auth login - Body:', body);
+    return this.forwardToService('identity', '/api/v1/auth/login', req, res, body, query, headers);
+  }
+
+  // Temporarily commented out wildcard route to test specific routes
+  // @Public()
+  // @All('auth/*path')
+  // async forwardAuthRequest(
+  //   @Req() req: Request,
+  //   @Res() res: Response,
+  //   @Body() body: any,
+  //   @Query() query: any,
+  //   @Headers() headers: any,
+  //   @Param('0') path: string,
+  // ) {
+  //   console.log('🔥 Auth wildcard request - Original URL:', req.url);
+  //   console.log('🔥 Auth wildcard - Path param:', path);
+  //   const targetPath = `/api/v1/auth/${path}`;
+  //   console.log('🔥 Auth wildcard - Target path:', targetPath);
+  //   return this.forwardToService('identity', targetPath, req, res, body, query, headers);
+  // }
+
   // Users routes (protected)
-  @All('users/*')
+  @UseGuards(JwtAuthGuard)
+  @All('users/*path')
   async forwardUsersRequest(
     @Req() req: Request,
     @Res() res: Response,
     @Body() body: any,
     @Query() query: any,
     @Headers() headers: any,
+    @Param('0') path: string,
   ) {
-    const path = req.url.replace('/api/users', '');
-    return this.forwardToService('identity', `/api/v1/users${path}`, req, res, body, query, headers);
+    return this.forwardToService('identity', `/api/v1/users/${path}`, req, res, body, query, headers);
   }
 
   // Posts routes (protected)
-  @All('posts/*')
+  @UseGuards(JwtAuthGuard)
+  @All('posts/*path')
   async forwardPostsRequest(
     @Req() req: Request,
     @Res() res: Response,
     @Body() body: any,
     @Query() query: any,
     @Headers() headers: any,
+    @Param('0') path: string,
   ) {
-    const path = req.url.replace('/api/posts', '');
-    return this.forwardToService('posts', `/api/v1/posts${path}`, req, res, body, query, headers);
+    return this.forwardToService('posts', `/api/v1/posts/${path}`, req, res, body, query, headers);
   }
 
   // Messages routes (protected)
-  @All('messages/*')
+  @UseGuards(JwtAuthGuard)
+  @All('messages/*path')
   async forwardMessagesRequest(
     @Req() req: Request,
     @Res() res: Response,
     @Body() body: any,
     @Query() query: any,
     @Headers() headers: any,
+    @Param('0') path: string,
   ) {
-    const path = req.url.replace('/api/messages', '');
-    return this.forwardToService('messages', `/api/messages${path}`, req, res, body, query, headers);
+    return this.forwardToService('messages', `/api/messages/${path}`, req, res, body, query, headers);
   }
 
   // Search routes (protected)
-  @All('search/*')
+  @UseGuards(JwtAuthGuard)
+  @All('search/*path')
   async forwardSearchRequest(
     @Req() req: Request,
     @Res() res: Response,
     @Body() body: any,
     @Query() query: any,
     @Headers() headers: any,
+    @Param('0') path: string,
   ) {
-    const path = req.url.replace('/api/search', '');
-    return this.forwardToService('search', `/search${path}`, req, res, body, query, headers);
+    return this.forwardToService('search', `/search/${path}`, req, res, body, query, headers);
   }
 
   // Service health checks (public)
