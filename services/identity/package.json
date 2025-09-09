@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "npm run build && node dist/main.js",
-    "build": "tsc -p tsconfig.json",
+    "build": "npx prisma generate && tsc -p tsconfig.json",
+    "start:dev": "npx prisma generate && ts-node src/main.ts",
     "lint": "echo 'lint'",
     "test": "echo 'test'",
     "migrate": "echo 'migrate'",
