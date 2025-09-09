@@ -47,11 +47,11 @@ export class CommentsService {
       data: {
         content,
         postId,
-        authorId: userId,
+        userId: userId,
         parentId
       },
       include: {
-        author: {
+        user: {
           select: {
             id: true,
             username: true,
@@ -95,7 +95,7 @@ export class CommentsService {
         take: limit,
         orderBy: { createdAt: 'desc' },
         include: {
-          author: {
+          user: {
             select: {
               id: true,
               username: true,
@@ -114,7 +114,7 @@ export class CommentsService {
             take: 3, // Show first 3 replies
             orderBy: { createdAt: 'asc' },
             include: {
-              author: {
+              user: {
                 select: {
                   id: true,
                   username: true,
@@ -155,7 +155,7 @@ export class CommentsService {
     const comment = await this.prisma.comment.findUnique({
       where: { id },
       include: {
-        author: {
+        user: {
           select: {
             id: true,
             username: true,
@@ -173,7 +173,7 @@ export class CommentsService {
         replies: {
           orderBy: { createdAt: 'asc' },
           include: {
-            author: {
+            user: {
               select: {
                 id: true,
                 username: true,
@@ -202,14 +202,14 @@ export class CommentsService {
   async update(id: string, updateCommentDto: UpdateCommentDto, userId: string) {
     const comment = await this.prisma.comment.findUnique({
       where: { id },
-      select: { authorId: true }
+      select: { userId: true }
     })
 
     if (!comment) {
       throw new NotFoundException('Comment not found')
     }
 
-    if (comment.authorId !== userId) {
+    if (comment.userId !== userId) {
       throw new ForbiddenException('You can only update your own comments')
     }
 
@@ -217,7 +217,7 @@ export class CommentsService {
       where: { id },
       data: updateCommentDto,
       include: {
-        author: {
+        user: {
           select: {
             id: true,
             username: true,
@@ -241,14 +241,14 @@ export class CommentsService {
   async remove(id: string, userId: string) {
     const comment = await this.prisma.comment.findUnique({
       where: { id },
-      select: { authorId: true }
+      select: { userId: true }
     })
 
     if (!comment) {
       throw new NotFoundException('Comment not found')
     }
 
-    if (comment.authorId !== userId) {
+    if (comment.userId !== userId) {
       throw new ForbiddenException('You can only delete your own comments')
     }
 
@@ -270,7 +270,7 @@ export class CommentsService {
 
     const existingLike = await this.prisma.like.findUnique({
       where: {
-        userId_commentId: {
+        unique_user_comment_like: {
           userId,
           commentId
         }

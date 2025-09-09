@@ -23,11 +23,11 @@ export class PostsService {
       data: {
         content,
         mediaUrls: mediaUrls || [],
-        visibility: visibility || 'public',
-        authorId: userId
+        isPublic: visibility !== 'private',
+        userId: userId
       },
       include: {
-        author: {
+        user: {
           select: {
             id: true,
             username: true,
@@ -52,7 +52,7 @@ export class PostsService {
     const { page, limit, userId } = options
     const skip = (page - 1) * limit
 
-    const where = userId ? { authorId: userId } : {}
+    const where = userId ? { userId: userId } : {}
 
     const [posts, total] = await Promise.all([
       this.prisma.post.findMany({
@@ -61,7 +61,7 @@ export class PostsService {
         take: limit,
         orderBy: { createdAt: 'desc' },
         include: {
-          author: {
+          user: {
             select: {
               id: true,
               username: true,
@@ -101,15 +101,15 @@ export class PostsService {
       this.prisma.post.findMany({
         where: {
           OR: [
-            { authorId: userId },
+            { userId: userId },
             {
-              author: {
-                followers: {
-                  some: {
-                    followerId: userId
-                  }
-                }
+              user: {
+            followers: {
+              some: {
+                followerId: userId
               }
+            }
+          }
             }
           ]
         },
@@ -117,7 +117,7 @@ export class PostsService {
         take: limit,
         orderBy: { createdAt: 'desc' },
         include: {
-          author: {
+          user: {
             select: {
               id: true,
               username: true,
@@ -141,9 +141,9 @@ export class PostsService {
       this.prisma.post.count({
         where: {
           OR: [
-            { authorId: userId },
+            { userId: userId },
             {
-              author: {
+              user: {
                 followers: {
                   some: {
                     followerId: userId
@@ -178,7 +178,7 @@ export class PostsService {
     const post = await this.prisma.post.findUnique({
       where: { id },
       include: {
-        author: {
+        user: {
           select: {
             id: true,
             username: true,
@@ -206,14 +206,14 @@ export class PostsService {
   async update(id: string, updatePostDto: UpdatePostDto, userId: string) {
     const post = await this.prisma.post.findUnique({
       where: { id },
-      select: { authorId: true }
+      select: { userId: true }
     })
 
     if (!post) {
       throw new NotFoundException('Post not found')
     }
 
-    if (post.authorId !== userId) {
+    if (post.userId !== userId) {
       throw new ForbiddenException('You can only update your own posts')
     }
 
@@ -221,7 +221,7 @@ export class PostsService {
       where: { id },
       data: updatePostDto,
       include: {
-        author: {
+        user: {
           select: {
             id: true,
             username: true,
@@ -245,14 +245,14 @@ export class PostsService {
   async remove(id: string, userId: string) {
     const post = await this.prisma.post.findUnique({
       where: { id },
-      select: { authorId: true }
+      select: { userId: true }
     })
 
     if (!post) {
       throw new NotFoundException('Post not found')
     }
 
-    if (post.authorId !== userId) {
+    if (post.userId !== userId) {
       throw new ForbiddenException('You can only delete your own posts')
     }
 
@@ -274,7 +274,7 @@ export class PostsService {
 
     const existingLike = await this.prisma.like.findUnique({
       where: {
-        userId_postId: {
+        unique_user_post_like: {
           userId,
           postId
         }

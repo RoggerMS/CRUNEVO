@@ -22,7 +22,7 @@ export class LikesService {
     // Check if already liked
     const existingLike = await this.prisma.like.findUnique({
       where: {
-        userId_postId: {
+        unique_user_post_like: {
           userId,
           postId
         }
@@ -56,7 +56,7 @@ export class LikesService {
   async unlikePost(postId: string, userId: string) {
     const existingLike = await this.prisma.like.findUnique({
       where: {
-        userId_postId: {
+        unique_user_post_like: {
           userId,
           postId
         }
@@ -87,7 +87,7 @@ export class LikesService {
     // Check if already liked
     const existingLike = await this.prisma.like.findUnique({
       where: {
-        userId_commentId: {
+        unique_user_comment_like: {
           userId,
           commentId
         }
@@ -121,7 +121,7 @@ export class LikesService {
   async unlikeComment(commentId: string, userId: string) {
     const existingLike = await this.prisma.like.findUnique({
       where: {
-        userId_commentId: {
+        unique_user_comment_like: {
           userId,
           commentId
         }
@@ -156,7 +156,7 @@ export class LikesService {
               content: true,
               mediaUrls: true,
               createdAt: true,
-              author: {
+              user: {
                 select: {
                   id: true,
                   username: true,
@@ -171,7 +171,7 @@ export class LikesService {
               id: true,
               content: true,
               createdAt: true,
-              author: {
+              user: {
                 select: {
                   id: true,
                   username: true,
