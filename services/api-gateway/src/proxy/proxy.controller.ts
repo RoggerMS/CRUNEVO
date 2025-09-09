@@ -1,7 +1,6 @@
 import {
   Controller,
   All,
-  Post,
   Req,
   Res,
   UseGuards,
@@ -19,54 +18,24 @@ import { Public } from '../auth/public.decorator';
 export class ProxyController {
   constructor(private readonly proxyService: ProxyService) {}
 
-  // Auth routes (public) - Using specific HTTP methods
+  // Auth routes (public)
   @Public()
-  @Post('auth/register')
-  async forwardAuthRegister(
+  @All('auth/*path')
+  async forwardAuthRequest(
     @Req() req: Request,
     @Res() res: Response,
     @Body() body: any,
     @Query() query: any,
     @Headers() headers: any,
+    @Param('path') path: string,
   ) {
-    console.log('🔥 Auth register request - Original URL:', req.url);
-    console.log('🔥 Auth register - Method:', req.method);
-    console.log('🔥 Auth register - Body:', body);
-    return this.forwardToService('identity', '/api/v1/auth/register', req, res, body, query, headers);
+    console.log('🔥 Auth request - Original URL:', req.url);
+    console.log('🔥 Auth - Method:', req.method);
+    console.log('🔥 Auth - Path param:', path);
+    const targetPath = `/api/v1/auth/${path}`;
+    console.log('🔥 Auth - Target path:', targetPath);
+    return this.forwardToService('identity', targetPath, req, res, body, query, headers);
   }
-
-  @Public()
-  @Post('auth/login')
-  async forwardAuthLogin(
-    @Req() req: Request,
-    @Res() res: Response,
-    @Body() body: any,
-    @Query() query: any,
-    @Headers() headers: any,
-  ) {
-    console.log('🔥 Auth login request - Original URL:', req.url);
-    console.log('🔥 Auth login - Method:', req.method);
-    console.log('🔥 Auth login - Body:', body);
-    return this.forwardToService('identity', '/api/v1/auth/login', req, res, body, query, headers);
-  }
-
-  // Temporarily commented out wildcard route to test specific routes
-  // @Public()
-  // @All('auth/*path')
-  // async forwardAuthRequest(
-  //   @Req() req: Request,
-  //   @Res() res: Response,
-  //   @Body() body: any,
-  //   @Query() query: any,
-  //   @Headers() headers: any,
-  //   @Param('0') path: string,
-  // ) {
-  //   console.log('🔥 Auth wildcard request - Original URL:', req.url);
-  //   console.log('🔥 Auth wildcard - Path param:', path);
-  //   const targetPath = `/api/v1/auth/${path}`;
-  //   console.log('🔥 Auth wildcard - Target path:', targetPath);
-  //   return this.forwardToService('identity', targetPath, req, res, body, query, headers);
-  // }
 
   // Users routes (protected)
   @UseGuards(JwtAuthGuard)
@@ -77,7 +46,7 @@ export class ProxyController {
     @Body() body: any,
     @Query() query: any,
     @Headers() headers: any,
-    @Param('0') path: string,
+    @Param('path') path: string,
   ) {
     return this.forwardToService('identity', `/api/v1/users/${path}`, req, res, body, query, headers);
   }
@@ -91,7 +60,7 @@ export class ProxyController {
     @Body() body: any,
     @Query() query: any,
     @Headers() headers: any,
-    @Param('0') path: string,
+    @Param('path') path: string,
   ) {
     return this.forwardToService('posts', `/api/v1/posts/${path}`, req, res, body, query, headers);
   }
@@ -105,7 +74,7 @@ export class ProxyController {
     @Body() body: any,
     @Query() query: any,
     @Headers() headers: any,
-    @Param('0') path: string,
+    @Param('path') path: string,
   ) {
     return this.forwardToService('messages', `/api/messages/${path}`, req, res, body, query, headers);
   }
@@ -119,7 +88,7 @@ export class ProxyController {
     @Body() body: any,
     @Query() query: any,
     @Headers() headers: any,
-    @Param('0') path: string,
+    @Param('path') path: string,
   ) {
     return this.forwardToService('search', `/search/${path}`, req, res, body, query, headers);
   }
