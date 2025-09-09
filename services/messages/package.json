@@ -4,9 +4,9 @@
   "description": "CRUNEVO Messages Service - Real-time messaging and chat functionality",
   "main": "dist/main.js",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "npx prisma generate && tsc -p tsconfig.json",
     "start": "node dist/main.js",
-    "start:dev": "ts-node src/main.ts",
+    "start:dev": "npx prisma generate && ts-node src/main.ts",
     "start:debug": "ts-node --inspect-brk src/main.ts",
     "start:prod": "node dist/main.js",
     "test": "jest",

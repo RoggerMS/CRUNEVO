@@ -79,6 +79,8 @@ Una red social moderna construida con arquitectura de microservicios usando Reac
    npm run dev
    ```
 
+   > Nota: Los scripts `start:dev` de los microservicios ahora ejecutan `prisma generate` automáticamente para evitar errores de módulos faltantes al trabajar con Docker.
+
 ### Producción con Docker
 
 1. **Construir y ejecutar todos los servicios**
