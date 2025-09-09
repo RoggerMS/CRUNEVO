@@ -3,17 +3,15 @@
 @tailwind utilities;
 
 @layer base {
-  * {
-    @apply border-border;
-  }
   body {
-    @apply bg-white text-gray-700 font-sans;
+    @apply bg-white text-gray-700;
+    font-family: 'Inter', system-ui, sans-serif;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-primary hover:bg-primary-600 text-white font-medium py-2 px-4 rounded-full transition-colors duration-200;
+    @apply bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-full transition-colors duration-200;
   }
   
   .btn-secondary {
@@ -21,7 +19,7 @@
   }
   
   .input-field {
-    @apply w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent;
+    @apply w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
   }
   
   .card {
@@ -33,6 +31,6 @@
   }
   
   .sidebar-item.active {
-    @apply bg-primary-50 text-primary-600;
+    @apply bg-blue-50 text-blue-600;
   }
 }

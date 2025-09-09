@@ -22,9 +22,10 @@ interface AuthState {
   logout: () => void
   updateUser: (user: Partial<User>) => void
   setLoading: (loading: boolean) => void
+  initializeAuth: () => void
 }
 
-export const useAuthStore = create<AuthState>()()
+export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
@@ -59,6 +60,12 @@ export const useAuthStore = create<AuthState>()()
       
       setLoading: (loading: boolean) => {
         set({ isLoading: loading })
+      },
+      
+      initializeAuth: () => {
+        // This method is called on app startup to initialize auth state
+        // The persist middleware will automatically restore the state
+        set({ isLoading: false })
       },
     }),
     {

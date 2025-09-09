@@ -1,0 +1,209 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database for Identity Service
+  identity-db:
+    image: postgres:15-alpine
+    container_name: crunevo-identity-db
+    environment:
+      POSTGRES_DB: identity_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5432:5432"
+    volumes:
+      - identity_db_data:/var/lib/postgresql/data
+    networks:
+      - crunevo-network
+
+  # PostgreSQL Database for Posts Service
+  posts-db:
+    image: postgres:15-alpine
+    container_name: crunevo-posts-db
+    environment:
+      POSTGRES_DB: posts_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5433:5432"
+    volumes:
+      - posts_db_data:/var/lib/postgresql/data
+    networks:
+      - crunevo-network
+
+  # PostgreSQL Database for Messages Service
+  messages-db:
+    image: postgres:15-alpine
+    container_name: crunevo-messages-db
+    environment:
+      POSTGRES_DB: messages_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5434:5432"
+    volumes:
+      - messages_db_data:/var/lib/postgresql/data
+    networks:
+      - crunevo-network
+
+  # Redis for caching and real-time features
+  redis:
+    image: redis:7-alpine
+    container_name: crunevo-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - crunevo-network
+    command: redis-server --appendonly yes
+
+  # Identity Service
+  identity-service:
+    build:
+      context: ./services/identity
+      dockerfile: Dockerfile
+    container_name: crunevo-identity-service
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - DATABASE_URL=postgresql://postgres:postgres123@identity-db:5432/identity_db
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+      - JWT_EXPIRES_IN=24h
+    depends_on:
+      - identity-db
+    networks:
+      - crunevo-network
+    volumes:
+      - ./services/identity:/app
+      - /app/node_modules
+    command: npm run start:dev
+
+  # Posts Service
+  posts-service:
+    build:
+      context: ./services/posts
+      dockerfile: Dockerfile
+    container_name: crunevo-posts-service
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=development
+      - PORT=3002
+      - DATABASE_URL=postgresql://postgres:postgres123@posts-db:5432/posts_db
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+    depends_on:
+      - posts-db
+    networks:
+      - crunevo-network
+    volumes:
+      - ./services/posts:/app
+      - /app/node_modules
+    command: npm run start:dev
+
+  # Messages Service
+  messages-service:
+    build:
+      context: ./services/messages
+      dockerfile: Dockerfile
+    container_name: crunevo-messages-service
+    ports:
+      - "3003:3003"
+    environment:
+      - NODE_ENV=development
+      - PORT=3003
+      - DATABASE_URL=postgresql://postgres:postgres123@messages-db:5432/messages_db
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - messages-db
+      - redis
+    networks:
+      - crunevo-network
+    volumes:
+      - ./services/messages:/app
+      - /app/node_modules
+    command: npm run start:dev
+
+  # Realtime Service
+  realtime-service:
+    build:
+      context: ./services/realtime
+      dockerfile: Dockerfile
+    container_name: crunevo-realtime-service
+    ports:
+      - "3005:3005"
+    environment:
+      - NODE_ENV=development
+      - PORT=3005
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+    networks:
+      - crunevo-network
+    volumes:
+      - ./services/realtime:/app
+      - /app/node_modules
+    command: npm run start:dev
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    container_name: crunevo-api-gateway
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+      - IDENTITY_SERVICE_URL=http://identity-service:3001
+      - POSTS_SERVICE_URL=http://posts-service:3002
+      - MESSAGES_SERVICE_URL=http://messages-service:3003
+      - REALTIME_SERVICE_URL=http://realtime-service:3005
+    depends_on:
+      - identity-service
+      - posts-service
+      - messages-service
+      - realtime-service
+    networks:
+      - crunevo-network
+    volumes:
+      - ./services/api-gateway:/app
+      - /app/node_modules
+    command: npm run start:dev
+
+  # Frontend Web App
+  web-app:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    container_name: crunevo-web-app
+    ports:
+      - "5173:5173"
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:3000
+      - VITE_WS_URL=http://localhost:3005
+    depends_on:
+      - api-gateway
+    networks:
+      - crunevo-network
+    volumes:
+      - ./apps/web:/app
+      - /app/node_modules
+    command: npm run dev -- --host 0.0.0.0
+
+volumes:
+  identity_db_data:
+  posts_db_data:
+  messages_db_data:
+  redis_data:
+
+networks:
+  crunevo-network:
+    driver: bridge

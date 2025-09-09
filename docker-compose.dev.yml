@@ -1,0 +1,224 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database for Identity Service
+  identity-db:
+    image: postgres:15-alpine
+    container_name: crunevo-identity-db-dev
+    environment:
+      POSTGRES_DB: identity_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5432:5432"
+    volumes:
+      - identity_db_data:/var/lib/postgresql/data
+    networks:
+      - crunevo-network
+
+  # PostgreSQL Database for Posts Service
+  posts-db:
+    image: postgres:15-alpine
+    container_name: crunevo-posts-db-dev
+    environment:
+      POSTGRES_DB: posts_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5433:5432"
+    volumes:
+      - posts_db_data:/var/lib/postgresql/data
+    networks:
+      - crunevo-network
+
+  # PostgreSQL Database for Messages Service
+  messages-db:
+    image: postgres:15-alpine
+    container_name: crunevo-messages-db-dev
+    environment:
+      POSTGRES_DB: messages_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5434:5432"
+    volumes:
+      - messages_db_data:/var/lib/postgresql/data
+    networks:
+      - crunevo-network
+
+  # Redis for caching and real-time features
+  redis:
+    image: redis:7-alpine
+    container_name: crunevo-redis-dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - crunevo-network
+    command: redis-server --appendonly yes
+
+  # pgAdmin for database management
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: crunevo-pgadmin-dev
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@crunevo.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "8080:80"
+    networks:
+      - crunevo-network
+    depends_on:
+      - identity-db
+      - posts-db
+      - messages-db
+
+  # Redis Commander for Redis management
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: crunevo-redis-commander-dev
+    environment:
+      REDIS_HOSTS: local:redis:6379
+    ports:
+      - "8081:8081"
+    networks:
+      - crunevo-network
+    depends_on:
+      - redis
+
+  # Identity Service
+  identity-service:
+    build:
+      context: ./services/identity
+      dockerfile: Dockerfile
+    container_name: crunevo-identity-service-dev
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgres123@identity-db:5432/identity_db"
+      JWT_SECRET: "your-super-secret-jwt-key-change-in-production"
+      JWT_EXPIRES_IN: "1h"
+      JWT_REFRESH_EXPIRES_IN: "7d"
+      PORT: "3001"
+      NODE_ENV: "development"
+      CORS_ORIGIN: "http://localhost:5173,http://localhost:3000,http://localhost:4000"
+    ports:
+      - "3001:3001"
+    networks:
+      - crunevo-network
+    depends_on:
+      - identity-db
+    volumes:
+      - ./services/identity:/app
+      - /app/node_modules
+
+  # Posts Service
+  posts-service:
+    build:
+      context: ./services/posts
+      dockerfile: Dockerfile
+    container_name: crunevo-posts-service-dev
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgres123@posts-db:5432/posts_db"
+      JWT_SECRET: "your-super-secret-jwt-key-change-in-production"
+      PORT: "3002"
+      NODE_ENV: "development"
+      CORS_ORIGIN: "http://localhost:5173,http://localhost:3000,http://localhost:4000"
+      IDENTITY_SERVICE_URL: "http://identity-service:3001"
+    ports:
+      - "3002:3002"
+    networks:
+      - crunevo-network
+    depends_on:
+      - posts-db
+      - identity-service
+    volumes:
+      - ./services/posts:/app
+      - /app/node_modules
+
+  # Messages Service
+  messages-service:
+    build:
+      context: ./services/messages
+      dockerfile: Dockerfile
+    container_name: crunevo-messages-service-dev
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgres123@messages-db:5432/messages_db"
+      JWT_SECRET: "your-super-secret-jwt-key-change-in-production"
+      PORT: "3003"
+      NODE_ENV: "development"
+      CORS_ORIGIN: "http://localhost:5173,http://localhost:3000,http://localhost:4000"
+      IDENTITY_SERVICE_URL: "http://identity-service:3001"
+      REDIS_URL: "redis://redis:6379"
+    ports:
+      - "3003:3003"
+    networks:
+      - crunevo-network
+    depends_on:
+      - messages-db
+      - redis
+      - identity-service
+    volumes:
+      - ./services/messages:/app
+      - /app/node_modules
+
+  # Realtime Service
+  realtime-service:
+    build:
+      context: ./services/realtime
+      dockerfile: Dockerfile
+    container_name: crunevo-realtime-service-dev
+    environment:
+      JWT_SECRET: "your-super-secret-jwt-key-change-in-production"
+      PORT: "3004"
+      NODE_ENV: "development"
+      CORS_ORIGIN: "http://localhost:5173,http://localhost:3000,http://localhost:4000"
+      REDIS_URL: "redis://redis:6379"
+      IDENTITY_SERVICE_URL: "http://identity-service:3001"
+    ports:
+      - "3004:3004"
+    networks:
+      - crunevo-network
+    depends_on:
+      - redis
+      - identity-service
+    volumes:
+      - ./services/realtime:/app
+      - /app/node_modules
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    container_name: crunevo-api-gateway-dev
+    environment:
+      JWT_SECRET: "your-super-secret-jwt-key-change-in-production"
+      PORT: "4000"
+      NODE_ENV: "development"
+      CORS_ORIGIN: "http://localhost:5173,http://localhost:3000"
+      IDENTITY_SERVICE_URL: "http://identity-service:3001"
+      POSTS_SERVICE_URL: "http://posts-service:3002"
+      MESSAGES_SERVICE_URL: "http://messages-service:3003"
+      REALTIME_SERVICE_URL: "http://realtime-service:3004"
+    ports:
+      - "4000:4000"
+    networks:
+      - crunevo-network
+    depends_on:
+      - identity-service
+      - posts-service
+      - messages-service
+      - realtime-service
+    volumes:
+      - ./services/api-gateway:/app
+      - /app/node_modules
+
+volumes:
+  identity_db_data:
+  posts_db_data:
+  messages_db_data:
+  redis_data:
+
+networks:
+  crunevo-network:
+    driver: bridge

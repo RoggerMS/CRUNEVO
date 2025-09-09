@@ -4,23 +4,47 @@ datasource db {
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.1.x"]
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  handle    String   @unique
-  status    String   @default("ACTIVE")
-  createdAt DateTime @default(now())
-  Credential Credential[]
+  id          String   @id @default(cuid())
+  email       String   @unique
+  username    String   @unique
+  displayName String
+  bio         String?
+  avatarUrl   String?
+  coverUrl    String?
+  location    String?
+  website     String?
+  birthDate   DateTime?
+  isVerified  Boolean  @default(false)
+  isPrivate   Boolean  @default(false)
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  credentials Credential[]
+  
+  @@map("users")
 }
 
 model Credential {
   id           String  @id @default(cuid())
-  user         User    @relation(fields: [userId], references: [id])
   userId       String
-  provider     String
-  providerId   String
+  provider     String  // 'local', 'google', 'github', etc.
+  providerId   String?
   passwordHash String?
+  accessToken  String?
+  refreshToken String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, provider])
+  @@map("credentials")
 }
