@@ -72,7 +72,7 @@ export class ProxyController {
 
   // Users routes (protected)
   @UseGuards(JwtAuthGuard)
-  @All('users/:path*')
+  @All('users/*path')
   async forwardUsersRequest(
     @Req() req: Request,
     @Res() res: Response,
@@ -86,7 +86,7 @@ export class ProxyController {
 
   // Posts routes (protected)
   @UseGuards(JwtAuthGuard)
-  @All('posts/:path*')
+  @All('posts/*path')
   async forwardPostsRequest(
     @Req() req: Request,
     @Res() res: Response,
@@ -100,7 +100,7 @@ export class ProxyController {
 
   // Messages routes (protected)
   @UseGuards(JwtAuthGuard)
-  @All('messages/:path*')
+  @All('messages/*path')
   async forwardMessagesRequest(
     @Req() req: Request,
     @Res() res: Response,
@@ -114,7 +114,7 @@ export class ProxyController {
 
   // Search routes (protected)
   @UseGuards(JwtAuthGuard)
-  @All('search/:path*')
+  @All('search/*path')
   async forwardSearchRequest(
     @Req() req: Request,
     @Res() res: Response,
