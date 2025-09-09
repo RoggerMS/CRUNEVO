@@ -19,11 +19,11 @@ export class AppService {
       version: '0.1.0',
       endpoints: {
         health: '/api/health',
-        auth: '/api/auth/*',
-        users: '/api/users/*',
-        posts: '/api/posts/*',
-        messages: '/api/messages/*',
-        search: '/api/search/*',
+        auth: '/api/auth/*path',
+        users: '/api/users/*path',
+        posts: '/api/posts/*path',
+        messages: '/api/messages/*path',
+        search: '/api/search/*path',
       },
     };
   }

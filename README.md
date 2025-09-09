@@ -174,6 +174,8 @@ REALTIME_SERVICE_URL="http://localhost:3005"
 PORT=3000
 ```
 
+Las rutas comodín del gateway usan la sintaxis `*path` de NestJS 11 para enrutar todas las peticiones (por ejemplo, `/api/users/*path`).
+
 ### Frontend
 ```env
 VITE_API_URL="http://localhost:3000"
