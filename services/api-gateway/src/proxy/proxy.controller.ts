@@ -84,7 +84,36 @@ export class ProxyController {
     return this.forwardToService('identity', `/api/v1/users/${path}`, req, res, body, query, headers);
   }
 
-  // Posts routes (protected)
+  // Posts routes (public) - Get all posts and individual post
+  @Public()
+  @All('posts')
+  async forwardPostsPublic(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Body() body: any,
+    @Query() query: any,
+    @Headers() headers: any,
+  ) {
+    const queryString = new URLSearchParams(query).toString();
+    const targetPath = queryString ? `/api/v1/posts?${queryString}` : '/api/v1/posts';
+    return this.forwardToService('posts', targetPath, req, res, body, query, headers);
+  }
+
+  // Posts routes (public) - Get individual post
+  @Public()
+  @All('posts/:id')
+  async forwardPostById(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Body() body: any,
+    @Query() query: any,
+    @Headers() headers: any,
+    @Param('id') id: string,
+  ) {
+    return this.forwardToService('posts', `/api/v1/posts/${id}`, req, res, body, query, headers);
+  }
+
+  // Posts routes (protected) - Other operations
   @UseGuards(JwtAuthGuard)
   @All('posts/*path')
   async forwardPostsRequest(
